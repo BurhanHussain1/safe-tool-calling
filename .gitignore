@@ -1,0 +1,44 @@
+# ---- secrets -------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- python --------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# ---- virtual envs --------------------------------------------------------
+.venv/
+venv/
+env/
+
+# ---- tooling caches ------------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---- local data ----------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+nl2api.db
+
+# ---- editors / OS --------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- streamlit -----------------------------------------------------------
+.streamlit/secrets.toml

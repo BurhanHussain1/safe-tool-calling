@@ -1,0 +1,21 @@
+# Runtime dependencies. Install with:
+#   pip install -r requirements.txt
+#
+# The package itself is installed with `pip install -e .` (see pyproject.toml).
+
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pydantic-settings>=2.6
+httpx>=0.27
+jsonschema>=4.23
+sqlalchemy>=2.0
+python-dotenv>=1.0
+pyyaml>=6.0
+
+# LLM provider (optional at runtime — the planner falls back to cassettes/rules
+# when no key is configured, which is how the test suite runs offline).
+anthropic>=0.40
+
+# UI
+streamlit>=1.40
