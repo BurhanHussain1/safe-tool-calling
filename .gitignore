@@ -1,44 +1,208 @@
-# ---- secrets -------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Secrets and credentials — never commit
+# ---------------------------------------------------------------------------
 .env
 .env.*
 !.env.example
 *.pem
 *.key
+*.crt
+*.p12
+*.pfx
+secrets.json
+credentials.json
+service-account*.json
+.netrc
+.npmrc
+.pypirc
 
-# ---- python --------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
 __pycache__/
-*.py[cod]
-*.egg-info/
+*.py[codz]
+*$py.class
+*.so
+*.pyd
+.Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
 .eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
 
-# ---- virtual envs --------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Virtual environments
+# ---------------------------------------------------------------------------
 .venv/
 venv/
 env/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+.tool-versions
 
-# ---- tooling caches ------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Tooling caches and reports
+# ---------------------------------------------------------------------------
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
-.coverage
-coverage.xml
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+.tox/
+.nox/
+.cache/
+.hypothesis/
 htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+coverage.json
+*.cover
+*.py,cover
+nosetests.xml
+junit*.xml
+report.html
+.benchmarks/
+prof/
 
-# ---- local data ----------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Local data — the audit database is regenerated on first run
+# ---------------------------------------------------------------------------
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 *.sqlite
 *.sqlite3
 nl2api.db
+data/
+/instance/
+dump.rdb
 
-# ---- editors / OS --------------------------------------------------------
-.vscode/
-.idea/
-*.swp
-Thumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+# ---------------------------------------------------------------------------
+# Logs and crash output
+# ---------------------------------------------------------------------------
+*.log
+logs/
+npm-debug.log*
+pip-wheel-metadata/
+core
+core.*
+*.stackdump
 
-# ---- streamlit -----------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Streamlit
+# ---------------------------------------------------------------------------
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------------------
+# Notebooks
+# ---------------------------------------------------------------------------
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+profile_default/
+ipython_config.py
+
+# ---------------------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------------------
+docker-compose.override.yml
+docker-compose.*.local.yml
+.dockerignore.local
+
+# ---------------------------------------------------------------------------
+# Editors and IDEs
+# ---------------------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.spyproject/
+.spyderproject/
+.ropeproject/
+*.swp
+*.swo
+*~
+.\#*
+\#*\#
+.dir-locals.el
+
+# ---------------------------------------------------------------------------
+# Operating system
+# ---------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.AppleDouble
+.LSOverride
+Icon?
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*.cab
+*.msi
+*.msix
+.fuse_hidden*
+.nfs*
+.directory
+.Trash-*
+
+# ---------------------------------------------------------------------------
+# Scratch — keep experiments out of history
+# ---------------------------------------------------------------------------
+scratch/
+scratchpad/
+tmp/
+temp/
+.tmp/
+*.tmp
+*.bak
+*.orig
+*.rej
+TODO.local.md
+NOTES.local.md
+
+# ---------------------------------------------------------------------------
+# Agent / assistant tooling
+# ---------------------------------------------------------------------------
+.claude/settings.local.json
+.aider*
+.cursorignore.local
+
+# ---------------------------------------------------------------------------
+# Recorded LLM cassettes are committed on purpose — the golden suite replays
+# them, so CI must be able to read them. Do not add tests/cassettes/ here.
+# ---------------------------------------------------------------------------
