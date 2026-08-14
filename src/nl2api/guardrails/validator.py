@@ -296,7 +296,7 @@ class PlanValidator:
                 message=f"{argument.name}: {message}",
             )
 
-        constraint = _first_schema_violation(value, schema)
+        constraint = schema_violation(value, schema)
         if constraint is not None:
             return FieldError(
                 step_id=step.id,
@@ -398,7 +398,7 @@ class PlanValidator:
         # deferred: a partial body would fail its own required-fields check and
         # report an error that is not actually there.
         if not deferred_body and spec.request_body_schema and body:
-            violation = _first_schema_violation(body, spec.request_body_schema)
+            violation = schema_violation(body, spec.request_body_schema)
             if violation is not None:
                 errors.append(
                     FieldError(
@@ -413,8 +413,12 @@ class PlanValidator:
         return errors
 
 
-def _first_schema_violation(value: Any, schema: dict[str, Any]) -> str | None:
-    """The first JSON Schema error for ``value``, as a readable sentence."""
+def schema_violation(value: Any, schema: dict[str, Any]) -> str | None:
+    """The first JSON Schema error for ``value``, as a readable sentence.
+
+    Public because the executor calls it again on resolved values: data from an
+    API response gets the same scrutiny as data from the model.
+    """
     validator = Draft202012Validator(schema)
     error = next(iter(validator.iter_errors(value)), None)
     if error is None:
