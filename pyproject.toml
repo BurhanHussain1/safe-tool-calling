@@ -74,6 +74,9 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ARG"]
+# Preview builders are a dispatch table keyed by operation_id, so they all take
+# (call, spec, reader) whether or not a given builder needs all three.
+"src/nl2api/guardrails/dryrun.py" = ["ARG001"]
 
 # ---------------------------------------------------------------------------
 # Tests

@@ -75,7 +75,11 @@ class Settings(BaseSettings):
 
     # -- Guardrails --------------------------------------------------------
     default_role: Role = Role.SUPPORT_AGENT
-    refund_approval_ceiling_cents: int = Field(default=50_000, ge=0)
+    # A hard ceiling, not an approval threshold. Refunds are *already* always
+    # approval-gated by their risk level, so "escalate to approval above X"
+    # would be a rule that never fires. Above this amount the assistant will not
+    # propose a refund at all — a human uses the admin console directly.
+    refund_max_cents: int = Field(default=50_000, ge=0)
     max_write_steps: int = Field(default=3, ge=1, le=20)
     retriever_top_k: int = Field(default=6, ge=1, le=50)
 
