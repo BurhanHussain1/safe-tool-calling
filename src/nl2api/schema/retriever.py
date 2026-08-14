@@ -42,11 +42,15 @@ _STOPWORDS = frozenset(
 #: to the schema words it implies. Kept small and explicit — this is a
 #: readability aid for the retriever, not a synonym engine.
 _QUERY_ALIASES: dict[str, str] = {
-    "money back": "refund",
-    "refunded": "refund",
-    "reimburse": "refund",
-    "charge back": "refund",
-    "chargeback": "refund",
+    # A refund always concerns an invoice, so a refund request needs the invoice
+    # endpoints offered too — otherwise a correct multi-step plan references an
+    # endpoint that was never on the menu.
+    "refund": "invoice",
+    "money back": "refund invoice",
+    "refunded": "refund invoice",
+    "reimburse": "refund invoice",
+    "charge back": "refund invoice",
+    "chargeback": "refund invoice",
     "bill": "invoice",
     "billing": "invoice",
     "receipt": "invoice",
@@ -56,6 +60,8 @@ _QUERY_ALIASES: dict[str, str] = {
     "overdue": "invoice open",
     "downgrade": "change plan subscription",
     "upgrade": "change plan subscription",
+    # Users say "plan"; the schema says "subscription".
+    "plan": "subscription",
     "seats": "subscription plan",
     "renewal": "subscription",
     "churn": "cancel subscription",
@@ -102,6 +108,14 @@ class Retriever(Protocol):
     """Anything that can shortlist endpoints for a request."""
 
     def top_k(self, query: str, k: int) -> list[ScoredTool]: ...
+
+    def resolver_candidates(self, query: str) -> list[ToolSpec]:
+        """Endpoints needed to resolve an identifier in the query.
+
+        Part of the protocol because a caller that trims the shortlist has to
+        know which entries must survive the trim — see ``Planner._shortlist``.
+        """
+        ...
 
 
 def singularize(token: str) -> str:

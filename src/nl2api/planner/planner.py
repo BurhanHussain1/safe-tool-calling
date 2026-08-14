@@ -122,13 +122,30 @@ class Planner:
 
         Filtering after ranking rather than before keeps the scores comparable
         across roles, which makes a surprising shortlist easier to debug.
+
+        We over-fetch so that role filtering does not leave a thin shortlist,
+        then trim back to ``k`` — but resolver candidates must survive the trim.
+        They rank last by design, so a naive ``[:k]`` discards exactly the
+        lookup endpoint the retriever appended on purpose, and a correct
+        multi-step plan then references an operation that was never offered.
         """
         ranked = self.retriever.top_k(request, k=k * 2)
         permitted = [c for c in ranked if c.spec.permits(role)]
         if len(permitted) < len(ranked):
             dropped = [c.operation_id for c in ranked if not c.spec.permits(role)]
             logger.debug("Dropped %s from the shortlist: role %s cannot call them.", dropped, role)
-        return permitted[:k]
+
+        head = permitted[:k]
+        head_ids = {c.operation_id for c in head}
+        resolver_ids = {spec.operation_id for spec in self.retriever.resolver_candidates(request)}
+        rescued = [
+            c
+            for c in permitted
+            if c.operation_id in resolver_ids and c.operation_id not in head_ids
+        ]
+        if not rescued:
+            return head
+        return [*head[: max(k - len(rescued), 1)], *rescued][:k]
 
     def _structural_errors(self, plan: Plan, offered: tuple[str, ...], role: Role) -> list[str]:
         """Check the claims a plan makes about *itself*, not about safety.

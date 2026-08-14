@@ -225,10 +225,22 @@ class RuleBasedBackend:
         ticket_id = _first(_TICKET_ID, text, upper=True)
         subscription_id = _first(_SUBSCRIPTION_ID, text, upper=True)
 
-        if _mentions(lowered, "refund", "money back", "reimburse"):
-            return self._plan_refund(text, email, customer_id, invoice_id, available)
+        # Order matters, and the first two rules are here because of specific
+        # misroutes found by the golden suite.
+        #
+        # A note on a ticket is checked before "refund", because "add a note to
+        # TIC-3001 saying the refund is under review" mentions a refund without
+        # asking for one. A named ticket plus note wording is the more specific
+        # signal, so it wins.
         if ticket_id and _mentions(lowered, "note", "comment"):
             return self._plan_comment(text, ticket_id, available)
+        # Deletion is handled explicitly rather than falling through to the
+        # customer-lookup branch. Silently reading a record when asked to delete
+        # one is worse than refusing: it reports success for a different action.
+        if _mentions(lowered, "delete", "remove", "erase", "purge"):
+            return self._plan_delete(text, customer_id, available)
+        if _mentions(lowered, "refund", "money back", "reimburse"):
+            return self._plan_refund(text, email, customer_id, invoice_id, available)
         if _mentions(lowered, "ticket", "case", "complaint") and _mentions(
             lowered, "open", "create", "raise", "file", "log"
         ):
@@ -251,6 +263,45 @@ class RuleBasedBackend:
         )
 
     # -- shapes ------------------------------------------------------------
+    def _plan_delete(self, text: str, customer_id: str | None, available: set[str]) -> Plan:
+        """Deletion, or an honest refusal.
+
+        When ``delete_customer`` is not on the menu — which is what a caller
+        below billing_admin sees — this refuses rather than doing something
+        adjacent. That is the whole point: an action the caller cannot perform
+        should produce a "no", not a quietly different action.
+        """
+        if "delete_customer" not in available:
+            return Plan.refusing(
+                intent=text,
+                reason=(
+                    "I cannot delete records. Deleting a customer needs billing "
+                    "administrator access, and it is not something I will do on "
+                    "your behalf."
+                ),
+            )
+        if not customer_id:
+            return Plan.asking(
+                intent=text,
+                question=(
+                    "Which customer should be deleted? Give me a customer id "
+                    "(like CUS-1006). This cannot be undone, so I want to be exact."
+                ),
+            )
+        return Plan(
+            intent=text,
+            steps=[
+                _step(
+                    "s1",
+                    "delete_customer",
+                    [("customer_id", "path", customer_id)],
+                    reason="Delete the customer the user named.",
+                    expected="The customer and their subscription history are removed.",
+                )
+            ],
+            assumptions=["This is permanent; the records cannot be recovered."],
+        )
+
     def _plan_refund(
         self,
         text: str,
