@@ -493,6 +493,35 @@ git push --follow-tags
 
 ---
 
+## 3a. Build log — what actually happened
+
+All six phases are complete. The bugs below were found by running the thing, not
+by reading it; each is worth knowing because each was a *silent* misbehaviour.
+
+| Phase | Finding |
+| --- | --- |
+| 1 | FastAPI 0.141 made router inclusion lazy — `@risk` metadata never reached the OpenAPI doc because included routes are no longer reachable from `app.routes`. Fixed by keying risk on `operationId` instead of walking the route table. |
+| 1 | 17 endpoints, not 16 (`GET /tickets/{id}` added). Seed data is *more* ambiguous than designed: `name="ana"` matches three customers. |
+| 2 | BM25 had no stemming, so `"refund"` never matched `list_refunds`. |
+| 2 | Structural blind spot: `search_customers` scored **zero** for "refund the last invoice for ana@acme.io", yet no plan can run without it. Fixed schema-driven — an identifier in the query offers the read-only endpoints that accept a parameter of that name. |
+| 3 | The original ceiling rule ("escalate to approval above X") could never fire — refunds are always gated already. Redefined as a hard refusal and renamed. |
+| 3 | Deferred values are stripped from `call.body`, so previews read "(not specified)" for values that were correctly wired. Fixed with a `DEFERRED` sentinel distinct from `None`. |
+| 4 | The ambiguity gate ran *after* resolution, so an empty lookup surfaced as "index 0 out of range". Moved before resolution. |
+| 5 | `_shortlist` over-fetched `2k` then truncated to `k`, discarding the resolver the retriever had deliberately appended last. |
+| 5 | "Add a note … saying the refund is under review" routed to the refund branch. |
+| 5 | `delete customer CUS-1006` as `support_agent` silently performed a **read** and reported success — worse than refusing. Deletion is now explicit. |
+| 5 | Every HTTP route returned 422: an `Annotated[..., Depends(...)]` alias defined inside the app factory is invisible to FastAPI under `from __future__ import annotations`, and an unresolvable dependency is silently treated as a query parameter. |
+
+Two deliberate departures from the plan as written above:
+
+- **Arguments are a flat `list[Argument]`**, not three `dict[str, Any]` fields —
+  structured outputs require `additionalProperties: false`, which an open dict
+  cannot express. Coercion moved into the validator, which is where it belongs.
+- **`depends_on` is computed**, not declared. A step's dependencies are exactly
+  the steps its `$steps` references point at.
+
+---
+
 ## 4. Definition of done
 
 - [ ] `docker compose up` boots the full stack

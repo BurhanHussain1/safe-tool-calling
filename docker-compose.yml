@@ -1,0 +1,79 @@
+# The whole stack, one command:
+#
+#   docker compose up --build
+#
+#   mock API   http://localhost:8000/docs
+#   assistant  http://localhost:8001/docs
+#   UI         http://localhost:8501
+#
+# No API key is required. Without ANTHROPIC_API_KEY the planner falls back to its
+# offline rule-based backend, so a reviewer can clone, run one command, and watch
+# a refund get gated — which is the whole point of the demo.
+
+name: nl2api
+
+x-common: &common
+  build:
+    context: .
+  environment: &env
+    NL2API_MOCK_API_URL: http://mock-api:8000
+    NL2API_DATABASE_URL: sqlite:////data/nl2api.db
+    NL2API_DEFAULT_ROLE: billing_admin
+    NL2API_LOG_LEVEL: INFO
+    # Passed through if set on the host; absent is fine.
+    ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    NL2API_MODEL: ${NL2API_MODEL:-claude-haiku-4-5}
+  restart: unless-stopped
+
+services:
+  mock-api:
+    <<: *common
+    container_name: nl2api-mock-api
+    command:
+      ["uvicorn", "nl2api.mock_api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  assistant:
+    <<: *common
+    container_name: nl2api-assistant
+    command:
+      ["uvicorn", "nl2api.service.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    ports: ["8001:8001"]
+    volumes: ["audit:/data"]
+    depends_on:
+      mock-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+  ui:
+    <<: *common
+    container_name: nl2api-ui
+    command:
+      - streamlit
+      - run
+      - src/nl2api/ui/app.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.headless=true
+      - --browser.gatherUsageStats=false
+    ports: ["8501:8501"]
+    volumes: ["audit:/data"]
+    depends_on:
+      assistant:
+        condition: service_healthy
+
+volumes:
+  # The audit trail outlives the containers, because an approval that vanishes
+  # on restart was never really an approval.
+  audit:
