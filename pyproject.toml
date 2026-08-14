@@ -17,6 +17,7 @@ dependencies = [
     "uvicorn[standard]>=0.32",
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
+    "email-validator>=2.2",
     "httpx>=0.27",
     "jsonschema>=4.23",
     "sqlalchemy>=2.0",

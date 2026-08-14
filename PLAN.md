@@ -202,7 +202,7 @@ role metadata.
 5. `main.py` — app factory plus a custom `openapi()` that injects
    `x-risk`, `x-required-roles`, `x-side-effects`, `x-idempotent` into each operation.
 
-**Endpoint surface (16)**
+**Endpoint surface (17)**
 
 | Method | Path | Risk | Roles |
 | --- | --- | --- | --- |
@@ -217,6 +217,7 @@ role metadata.
 | GET | `/invoices` (filter customer/status) | read_only | viewer |
 | GET | `/invoices/{invoice_id}` | read_only | viewer |
 | GET | `/tickets` (filter customer/status) | read_only | viewer |
+| GET | `/tickets/{ticket_id}` (with comments) | read_only | viewer |
 | POST | `/tickets` | low_risk_write | support_agent |
 | PATCH | `/tickets/{ticket_id}` | low_risk_write | support_agent |
 | POST | `/tickets/{ticket_id}/comments` | low_risk_write | support_agent |
